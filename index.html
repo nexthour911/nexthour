@@ -22,31 +22,7 @@
 <button onclick="signup()">Sign Up</button>
 
 <button onclick="googleLogin()">Continue with Google</button>
-  import { GoogleAuthProvider, signInWithPopup } from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-const provider = new GoogleAuthProvider();
-
-window.googleLogin = async function () {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-
-    await setDoc(doc(db, "users", user.uid), {
-      email: user.email,
-      role: "customer",
-      provider: "google",
-      createdAt: serverTimestamp()
-    }, { merge: true });
-
-    document.getElementById("msg").innerText =
-      "Logged in with Google";
-
-  } catch (error) {
-    document.getElementById("msg").innerText = error.message;
-  }
-};
-
+  
 <p id="msg"></p>
 
 <script type="module">
