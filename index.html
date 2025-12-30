@@ -4,7 +4,28 @@
   <title>Next Hour</title>
 </head>
 <body>
-  <h1>NEXT HOUR</h1>
-  <p>AT YOUR DOORSTEP IN 60 MINUTES.</p>
+
+<h1>NEXT HOUR</h1>
+<p>AT YOUR DOORSTEP IN 60 MINUTES.</p>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
+    authDomain: "nexthour-3248f.firebaseapp.com",
+    projectId: "nexthour-3248f",
+    storageBucket: "nexthour-3248f.firebasestorage.app",
+    messagingSenderId: "83247480758",
+    appId: "1:83247480758:web:27f8f8507273d54ee44b17"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  console.log("Firebase connected");
+</script>
+
 </body>
-</html>
+<
