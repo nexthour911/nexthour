@@ -3,14 +3,31 @@
 <head>
   <title>Next Hour</title>
 </head>
+
+
 <body>
 
-<h1>NEXT HOUR</h1>
+<h1>Next Hour</h1>
 <p>AT YOUR DOORSTEP IN 60 MINUTES.</p>
+
+<h3>Signup</h3>
+
+<input type="email" id="email" placeholder="Email"><br><br>
+<input type="password" id="password" placeholder="Password"><br><br>
+
+<select id="role">
+  <option value="customer">Customer</option>
+  <option value="seller">Seller</option>
+</select><br><br>
+
+<button onclick="signup()">Sign Up</button>
+
+<p id="msg"></p>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
@@ -19,13 +36,34 @@
     storageBucket: "nexthour-3248f.firebasestorage.app",
     messagingSenderId: "83247480758",
     appId: "1:83247480758:web:27f8f8507273d54ee44b17"
-  };
+};
+
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  console.log("Firebase connected");
+  window.signup = async function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        email: email,
+        role: role,
+        createdAt: serverTimestamp()
+      });
+
+      document.getElementById("msg").innerText =
+        "Signup successful as " + role;
+
+    } catch (error) {
+      document.getElementById("msg").innerText = error.message;
+    }
+  };
 </script>
 
 </body>
-<
