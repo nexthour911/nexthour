@@ -24,16 +24,14 @@
 <button onclick="googleLogin()">Continue with Google</button>
   
 <p id="msg"></p>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 
   import {
     getAuth,
-    createUserWithEmailAndPassword,
     GoogleAuthProvider,
     signInWithPopup
-  } from "https://www.gstaticatic.com/firebasejs/9.23.0/firebase-auth.js";
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
   import {
     getFirestore,
@@ -42,7 +40,7 @@
     serverTimestamp
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  window.googleLogin = async function () {const provider = new GoogleAuthProvider();
+  const provider = new GoogleAuthProvider();
 
 window.googleLogin = async function () {
   try {
