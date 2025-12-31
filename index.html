@@ -27,11 +27,22 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-  
-const provider = new GoogleAuthProvider();
+
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup
+  } from "https://www.gstaticatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  window.googleLogin = async function () {const provider = new GoogleAuthProvider();
 
 window.googleLogin = async function () {
   try {
@@ -50,8 +61,10 @@ window.googleLogin = async function () {
     alert(error.message);
   }
 };
-
-  const firebaseConfig = {
+  
+  };
+  
+    const firebaseConfig = {
     apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
     authDomain: "nexthour-3248f.firebaseapp.com",
     projectId: "nexthour-3248f",
