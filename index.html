@@ -28,8 +28,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { GoogleAuthProvider, signInWithPopup } 
-from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
   import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
   
 const provider = new GoogleAuthProvider();
@@ -51,9 +50,6 @@ window.googleLogin = async function () {
     alert(error.message);
   }
 };
-
-import { getFirestore, doc, setDoc, serverTimestamp }
-from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
