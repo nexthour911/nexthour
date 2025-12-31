@@ -1,102 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Next Hour</title>
 </head>
-
-
 <body>
 
-<h1>Next Hour</h1>
-<p>AT YOUR DOORSTEP IN 60 MINUTES.</p>
+  <h1>Next Hour</h1>
+  <p>AT YOUR DOORSTEP IN 60 MINUTES.</p>
 
-<h3>Signup</h3>
-<input type="email" id="email" placeholder="Email"><br><br>
-<input type="password" id="password" placeholder="Password"><br><br>
+  <h2>Signup</h2>
 
-<select id="role">
-  <option value="customer">Customer</option>
-  <option value="seller">Seller</option>
-</select><br><br>
+  <input type="email" id="email" placeholder="Email" /><br><br>
+  <input type="password" id="password" placeholder="Password" /><br><br>
 
-<button onclick="signup()">Sign Up</button>
+  <select id="role">
+    <option value="customer">Customer</option>
+    <option value="seller">Seller</option>
+  </select><br><br>
 
-<button onclick="googleLogin()">Continue with Google</button>
-  
-<p id="msg"></p>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  <button onclick="emailSignup()">Sign Up</button>
+  <button onclick="googleLogin()">Continue with Google</button>
 
-  import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  <!-- FIREBASE SCRIPT -->
+  <script type="module">
+    // 🔹 IMPORTS
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 
-  import {
-    getFirestore,
-    doc,
-    setDoc,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      GoogleAuthProvider,
+      signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  const provider = new GoogleAuthProvider();
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-window.googleLogin = async function () {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-
-    await setDoc(doc(db, "users", user.uid), {
-      email: user.email,
-      role: "customer",
-      provider: "google",
-      createdAt: serverTimestamp()
-    }, { merge: true });
-
-    alert("Google login successful");
-  } catch (error) {
-    alert(error.message);
-  }
-};
-  
-  };
-  
+    // 🔹 FIREBASE CONFIG
     const firebaseConfig = {
-    apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
-    authDomain: "nexthour-3248f.firebaseapp.com",
-    projectId: "nexthour-3248f",
-    storageBucket: "nexthour-3248f.firebasestorage.app",
-    messagingSenderId: "83247480758",
-    appId: "1:83247480758:web:27f8f8507273d54ee44b17"
+      apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
+  authDomain: "nexthour-3248f.firebaseapp.com",
+  projectId: "nexthour-3248f",
+  storageBucket: "nexthour-3248f.firebasestorage.app",
+  messagingSenderId: "83247480758",
+  appId: "1:83247480758:web:27f8f8507273d54ee44b17"
 };
 
+    // 🔹 INIT
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+    // 🔹 EMAIL SIGNUP
+    window.emailSignup = async function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
 
-  window.signup = async function () {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const role = document.getElementById("role").value;
+      try {
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        const user = result.user;
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          role: role,
+          provider: "email",
+          createdAt: serverTimestamp()
+        });
 
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        email: email,
-        role: role,
-        createdAt: serverTimestamp()
-      });
+        alert("Signup successful");
+      } catch (error) {
+        alert(error.message);
+        console.error(error);
+      }
+    };
 
-      document.getElementById("msg").innerText =
-        "Signup successful as " + role;
+    // 🔹 GOOGLE LOGIN
+    const provider = new GoogleAuthProvider();
 
-    } catch (error) {
-      document.getElementById("msg").innerText = error.message;
-    }
-  };
-</script>
+    window.googleLogin = async function () {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          role: "customer",
+          provider: "google",
+          createdAt: serverTimestamp()
+        }, { merge: true });
+
+        alert("Google login successful");
+      } catch (error) {
+        alert(error.message);
+        console.error(error);
+      }
+    };
+  </script>
 
 </body>
+</html>
