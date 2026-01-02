@@ -17,13 +17,13 @@
     .box {
       background: white;
       padding: 30px;
-      width: 320px;
+      width: 330px;
       border-radius: 8px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       text-align: center;
     }
 
-    input, button {
+    input, select, button {
       width: 100%;
       padding: 10px;
       margin: 8px 0;
@@ -53,12 +53,16 @@
     <input id="email" type="email" placeholder="Email">
     <input id="password" type="password" placeholder="Password">
 
+    <select id="role">
+      <option value="customer">Customer</option>
+      <option value="seller">Seller</option>
+    </select>
+
     <button id="signupBtn">Signup</button>
     <button id="loginBtn">Login</button>
     <button id="googleBtn" class="google">Continue with Google</button>
   </div>
 
-  <!-- 🔥 FIREBASE LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import {
@@ -68,6 +72,13 @@
       GoogleAuthProvider,
       signInWithPopup
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     // 🔴 REPLACE WITH YOUR FIREBASE CONFIG
     const firebaseConfig = {
@@ -79,28 +90,83 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
-    // BUTTON REFERENCES
     const email = document.getElementById("email");
     const password = document.getElementById("password");
+    const roleSelect = document.getElementById("role");
 
-    document.getElementById("signupBtn").onclick = () => {
-      createUserWithEmailAndPassword(auth, email.value, password.value)
-        .then(() => alert("Signup successful ✅"))
-        .catch(err => alert(err.message));
+    // SIGNUP
+    document.getElementById("signupBtn").onclick = async () => {
+      try {
+        const userCred = await createUserWithEmailAndPassword(
+          auth,
+          email.value,
+          password.value
+        );
+
+        await setDoc(doc(db, "users", userCred.user.uid), {
+          email: email.value,
+          role: roleSelect.value
+        });
+
+        alert("Signup successful ✅");
+
+      } catch (err) {
+        alert(err.message);
+      }
     };
 
-    document.getElementById("loginBtn").onclick = () => {
-      signInWithEmailAndPassword(auth, email.value, password.value)
-        .then(() => alert("Login successful ✅"))
-        .catch(err => alert(err.message));
+    // LOGIN
+    document.getElementById("loginBtn").onclick = async () => {
+      try {
+        const userCred = await signInWithEmailAndPassword(
+          auth,
+          email.value,
+          password.value
+        );
+
+        const snap = await getDoc(doc(db, "users", userCred.user.uid));
+
+        if (!snap.exists()) {
+          alert("User role not found");
+          return;
+        }
+
+        const role = snap.data().role;
+
+        if (role === "seller") {
+          window.location.href = "seller.html";
+        } else {
+          window.location.href = "customer.html";
+        }
+
+      } catch (err) {
+        alert(err.message);
+      }
     };
 
-    document.getElementById("googleBtn").onclick = () => {
-      signInWithPopup(auth, provider)
-        .then(() => alert("Google login successful ✅"))
-        .catch(err => alert(err.message));
+    // GOOGLE LOGIN
+    document.getElementById("googleBtn").onclick = async () => {
+      try {
+        const userCred = await signInWithPopup(auth, provider);
+
+        const ref = doc(db, "users", userCred.user.uid);
+        const snap = await getDoc(ref);
+
+        if (!snap.exists()) {
+          await setDoc(ref, {
+            email: userCred.user.email,
+            role: "customer"
+          });
+        }
+
+        window.location.href = "customer.html";
+
+      } catch (err) {
+        alert(err.message);
+      }
     };
   </script>
 
