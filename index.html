@@ -1,61 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Next Hour</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    input, select, button { margin: 5px 0; padding: 6px; }
+    .hidden { display: none; }
+  </style>
+</head>
 <body>
 
 <h1>Next Hour</h1>
 <p>AT YOUR DOORSTEP IN 60 MINUTES.</p>
 
-<h3>Signup</h3>
+<!-- AUTH SECTION -->
+<div id="authSection">
+  <h2>Signup / Login</h2>
 
-<input type="email" id="email" placeholder="Email"><br><br>
-<input type="password" id="password" placeholder="Password"><br><br>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Password"><br>
 
-<select id="role">
-  <option value="customer">Customer</option>
-  <option value="seller">Seller</option>
-</select><br><br>
+  <select id="role">
+    <option value="customer">Customer</option>
+    <option value="seller">Seller</option>
+  </select><br>
 
-<button onclick="signup()">Sign Up</button>
+  <button onclick="signup()">Sign Up</button>
+  <button onclick="login()">Login</button>
+  <br><br>
+  <button onclick="googleLogin()">Continue with Google</button>
+</div>
 
-<p id="msg"></p>
+<!-- CUSTOMER DASHBOARD -->
+<div id="customerDashboard" class="hidden">
+  <h2>Customer Dashboard</h2>
+  <p>Welcome! Order delivered in 60 minutes 🚀</p>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- SELLER DASHBOARD -->
+<div id="sellerDashboard" class="hidden">
+  <h2>Seller Dashboard</h2>
+  <p>Manage your products and orders 📦</p>
+  <button onclick="logout()">Logout</button>
+</div>
 
 <script type="module">
+  // 🔹 IMPORTS
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  // 🔹 FIREBASE CONFIG (REPLACE WITH YOUR OWN)
   const firebaseConfig = {
-    apiKey: "YOUR_KEY",
-    authDomain: "YOUR_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_BUCKET",
-    messagingSenderId: "YOUR_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
   };
 
+  // 🔹 INIT
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
 
-  window.signup = async function () {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+  // 🔹 UI HANDLERS
+  function show(section) {
+    authSection.classList.add("hidden");
+    customerDashboard.classList.add("hidden");
+    sellerDashboard.classList.add("hidden");
+    section.classList.remove("hidden");
+  }
+
+  // 🔹 SIGNUP
+  window.signup = async () => {
+    const email = email.value;
+    const password = password.value;
     const role = document.getElementById("role").value;
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        email: email,
-        role: role,
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "users", res.user.uid), {
+        email,
+        role,
+        provider: "email",
         createdAt: serverTimestamp()
       });
-
-      document.getElementById("msg").innerText =
-        "Signup successful as " + role;
-
-    } catch (error) {
-      document.getElementById("msg").innerText = error.message;
+      alert("Signup successful");
+    } catch (e) {
+      alert(e.message);
     }
+  };
+
+  // 🔹 LOGIN
+  window.login = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email.value, password.value);
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  // 🔹 GOOGLE LOGIN
+  window.googleLogin = async () => {
+    try {
+      const res = await signInWithPopup(auth, provider);
+      await setDoc(doc(db, "users", res.user.uid), {
+        email: res.user.email,
+        role: "customer",
+        provider: "google",
+        createdAt: serverTimestamp()
+      }, { merge: true });
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  // 🔹 AUTH STATE
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      show(authSection);
+      return;
+    }
+
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (!snap.exists()) return;
+
+    const role = snap.data().role;
+    role === "seller" ? show(sellerDashboard) : show(customerDashboard);
+  });
+
+  // 🔹 LOGOUT
+  window.logout = async () => {
+    await signOut(auth);
+    show(authSection);
   };
 </script>
 
 </body>
+</html>
