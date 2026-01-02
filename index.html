@@ -1,151 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Next Hour</title>
-
-  <!-- BASIC STYLING -->
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f7fb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .box {
-      background: #fff;
-      padding: 30px;
-      width: 320px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    h1 {
-      margin-bottom: 5px;
-    }
-
-    p {
-      color: #555;
-      margin-bottom: 20px;
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    button {
-      cursor: pointer;
-      background: #3b82f6;
-      color: white;
-      border: none;
-    }
-
-    button.google {
-      background: #db4437;
-    }
-  </style>
-</head>
-
 <body>
 
-  <div class="box">
-    <h1>Next Hour</h1>
-    <p>At your doorstep in 60 minutes</p>
+<h1>Next Hour</h1>
+<p>AT YOUR DOORSTEP IN 60 MINUTES.</p>
 
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
+<h3>Signup</h3>
 
-    <select id="role">
-      <option value="customer">Customer</option>
-      <option value="seller">Seller</option>
-    </select>
+<input type="email" id="email" placeholder="Email"><br><br>
+<input type="password" id="password" placeholder="Password"><br><br>
 
-    <button id="signupBtn">Signup</button>
-    <button id="loginBtn">Login</button>
-    <button id="googleBtn" class="google">Continue with Google</button>
-  </div>
+<select id="role">
+  <option value="customer">Customer</option>
+  <option value="seller">Seller</option>
+</select><br><br>
 
-  <!-- FIREBASE + AUTH LOGIC -->
-  <script type="module">
-    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      GoogleAuthProvider,
-      signInWithPopup
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+<button onclick="signup()">Sign Up</button>
 
-    // 🔴 REPLACE THESE WITH YOUR FIREBASE KEYS
-    const firebaseConfig = {
-      apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
-      authDomain: "nexthour-3248f.firebaseapp.com",
-      projectId: "nexthour-3248f",
-      storageBucket: "nexthour-3248f.firebasestorage.app",
-      messagingSenderId: "83247480758",
-      appId: "1:83247480758:web:27f8f8507273d54ee44b17"
-    };
-    };
+<p id="msg"></p>
 
-    // Initialize Firebase app (avoid multiple declarations)
-    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // SIGNUP FUNCTION
-    function signup() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+  const firebaseConfig = {
+    apiKey: "YOUR_KEY",
+    authDomain: "YOUR_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_BUCKET",
+    messagingSenderId: "YOUR_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          alert("Signup successful!");
-        })
-        .catch(error => {
-          alert(error.message);
-        });
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  window.signup = async function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        email: email,
+        role: role,
+        createdAt: serverTimestamp()
+      });
+
+      document.getElementById("msg").innerText =
+        "Signup successful as " + role;
+
+    } catch (error) {
+      document.getElementById("msg").innerText = error.message;
     }
-
-    // LOGIN FUNCTION
-    function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          alert("Login successful!");
-        })
-        .catch(error => {
-          alert(error.message);
-        });
-    }
-
-    // GOOGLE LOGIN FUNCTION
-    function googleLogin() {
-      signInWithPopup(auth, provider)
-        .then(() => {
-          alert("Google login successful!");
-        })
-        .catch(error => {
-          alert(error.message);
-        });
-    }
-
-    // Attach event listeners to buttons
-    document.getElementById("signupBtn").addEventListener("click", signup);
-    document.getElementById("loginBtn").addEventListener("click", login);
-    document.getElementById("googleBtn").addEventListener("click", googleLogin);
-
-  </script>
+  };
+</script>
 
 </body>
-</html>
