@@ -1,117 +1,144 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Next Hour</title>
-  <link rel="stylesheet" href="css/style.css">
+
+  <!-- BASIC STYLING (you can improve later) -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .box {
+      background: #fff;
+      padding: 30px;
+      width: 320px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    p {
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+      background: #3b82f6;
+      color: white;
+      border: none;
+    }
+
+    button.google {
+      background: #db4437;
+    }
+  </style>
 </head>
 
 <body>
 
   <div class="box">
-
-    <h2>Next Hour</h2>
+    <h1>Next Hour</h1>
     <p>At your doorstep in 60 minutes</p>
 
-    <!-- AUTH SECTION -->
-    <div id="authSection">
-      <input id="email" placeholder="Email">
-      <input id="password" type="password" placeholder="Password">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
 
-      <select id="role">
-        <option value="customer">Customer</option>
-        <option value="seller">Seller</option>
-      </select>
+    <select id="role">
+      <option value="customer">Customer</option>
+      <option value="seller">Seller</option>
+    </select>
 
-      <button onclick="signup()">Signup</button>
-      <button onclick="login()">Login</button>
-      <button onclick="googleLogin()">Continue with Google</button>
-    </div>
-
-    <!-- CUSTOMER DASHBOARD -->
-    <div id="customerDashboard" class="hidden">
-      <h3>Customer Dashboard</h3>
-      <button onclick="logout()">Logout</button>
-    </div>
-
-    <!-- SELLER DASHBOARD -->
-    <div id="sellerDashboard" class="hidden">
-      <h3>Seller Dashboard</h3>
-      <button onclick="logout()">Logout</button>
-    </div>
-
+    <button onclick="signup()">Signup</button>
+    <button onclick="login()">Login</button>
+    <button class="google" onclick="googleLogin()">Continue with Google</button>
   </div>
 
-  <!-- SCRIPTS (VERY IMPORTANT PLACE) -->
-  <script type="module" src="./firebase.js"></script>
-  <script type="module" src="./auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- 🔥 FIREBASE + AUTH LOGIC (ALL IN ONE FILE) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      GoogleAuthProvider,
+      signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-<script>
-  // 🔥 FIREBASE CONFIG (PUT YOUR OWN)
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-  };
+    // 🔴 REPLACE THESE WITH YOUR FIREBASE KEYS
+    const firebaseConfig = {
+     apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
+  authDomain: "nexthour-3248f.firebaseapp.com",
+  projectId: "nexthour-3248f",
+  appId: "1:83247480758:web:27f8f8507273d54ee44b17"
+};
 
-  firebase.initializeApp(firebaseConfig);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-  // SIGNUP
-  function signup() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const role = document.getElementById("role").value;
+    // SIGNUP
+    window.signup = function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(res => {
-        return db.collection("users").doc(res.user.uid).set({
-          email,
-          role
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          alert("Signup successful");
+        })
+        .catch(error => {
+          alert(error.message);
         });
-      })
-      .then(() => alert("Signup successful"))
-      .catch(err => alert(err.message));
-  }
+    };
 
-  // LOGIN
-  function login() {
-    auth.signInWithEmailAndPassword(
-      email.value,
-      password.value
-    ).catch(err => alert(err.message));
-  }
+    // LOGIN
+    window.login = function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-  // GOOGLE LOGIN
-  function googleLogin() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-      .then(res => {
-        return db.collection("users").doc(res.user.uid).set({
-          email: res.user.email,
-          role: "customer"
-        }, { merge: true });
-      });
-  }
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          alert("Login successful");
+        })
+        .catch(error => {
+          alert(error.message);
+        });
+    };
 
-  // LOGOUT
-  function logout() {
-    auth.signOut();
-  }
+    // GOOGLE LOGIN
+    window.googleLogin = function () {
+      signInWithPopup(auth, provider)
+        .then(() => {
+          alert("Google login successful");
+        })
+        .catch(error => {
+          alert(error.message);
+        });
+    };
+  </script>
 
-  // AUTH STATE
-  auth.onAuthStateChanged(user => {
-    if (!user) return;
-
-    db.collection("users").doc(user.uid).get().then(doc => {
-      const role = doc.data().role;
-      alert("Logged in as " + role);
-    });
-  });
-</script>
 </body>
 </html>
