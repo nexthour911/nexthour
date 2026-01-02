@@ -1,7 +1,272 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quick Commerce</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f5f5f5;
+}
+
+/* HEADER */
+header {
+  background: white;
+  padding: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0,0,0,.1);
+}
+
+header h2 { margin: 0; }
+header input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+/* CATEGORIES */
+#categories {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  padding: 10px;
+  background: white;
+}
+#categories button {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: none;
+  background: #e5e7eb;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* PRODUCTS */
+#products {
+  padding: 12px;
+}
+.product {
+  background: white;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.product small { color: gray; }
+
+/* CART */
+#cart {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: white;
+  padding: 10px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,.2);
+}
+#cart ul { list-style: none; padding: 0; }
+#cart button { padding: 6px 10px; }
+
+/* ORDERS */
+section {
+  padding: 12px;
+}
+.order {
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.danger { background:#dc2626;color:white;border:none; }
+.success { background:#16a34a;color:white;border:none; }
+
+</style>
+</head>
+
 <body>
-  <h1>Customer Dashboard</h1>
-  <p>Welcome, customer 👋</p>
+
+<header>
+  <h2>Deliver in 1 hour</h2>
+  <input id="searchInput" placeholder="Search products">
+</header>
+
+<div id="categories"></div>
+
+<div id="products"></div>
+
+<section>
+  <h3>My Orders</h3>
+  <div id="orders"></div>
+</section>
+
+<div id="cart">
+  <ul id="cartItems"></ul>
+  <button id="checkoutBtn" class="success">Place Order</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getFirestore, collection, addDoc, getDocs,
+  query, where, deleteDoc, doc, updateDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let user, activeCategory = "";
+
+const categoryList = [
+  "Men's wear","Women's wear","Kid's wear","Street style",
+  "Casuals","Classy","Formals","Party wear"
+];
+
+/* AUTH */
+onAuthStateChanged(auth, u => {
+  if (!u) location.href = "index.html";
+  user = u;
+  renderCategories();
+  loadProducts();
+  loadCart();
+  loadOrders();
+});
+
+/* CATEGORIES */
+function renderCategories() {
+  categories.innerHTML = "";
+  categoryList.forEach(c => {
+    const b = document.createElement("button");
+    b.innerText = c;
+    b.onclick = () => { activeCategory = c; loadProducts(); };
+    categories.appendChild(b);
+  });
+}
+
+/* PRODUCTS */
+async function loadProducts() {
+  const snap = await getDocs(collection(db,"products"));
+  products.innerHTML = "";
+
+  snap.forEach(d => {
+    const p = d.data();
+    if (
+      (!activeCategory || p.category === activeCategory) &&
+      (!searchInput.value || p.name.toLowerCase().includes(searchInput.value.toLowerCase()))
+    ) {
+      products.innerHTML += `
+        <div class="product">
+          <div>
+            <b>${p.name}</b><br>
+            <small>${p.category}</small><br>
+            ₹${p.price}
+          </div>
+          <div>
+            <button onclick="addToCart('${d.id}','${p.name}')">＋</button>
+            <button onclick="fav('${d.id}')">❤️</button>
+          </div>
+        </div>`;
+    }
+  });
+}
+searchInput.oninput = loadProducts;
+
+/* CART */
+window.addToCart = async (pid,name) => {
+  await addDoc(collection(db,"carts"), {
+    userId: user.uid,
+    productId: pid,
+    productName: name
+  });
+  loadCart();
+};
+
+async function loadCart() {
+  const q = query(collection(db,"carts"), where("userId","==",user.uid));
+  const snap = await getDocs(q);
+  cartItems.innerHTML = "";
+  snap.forEach(d => {
+    cartItems.innerHTML += `<li>${d.data().productName}
+    <button onclick="removeCart('${d.id}')">−</button></li>`;
+  });
+}
+
+window.removeCart = async id => {
+  await deleteDoc(doc(db,"carts",id));
+  loadCart();
+};
+
+/* ORDER */
+checkoutBtn.onclick = async () => {
+  const snap = await getDocs(query(collection(db,"carts"), where("userId","==",user.uid)));
+  snap.forEach(async d => {
+    await addDoc(collection(db,"orders"), {
+      customerId: user.uid,
+      productName: d.data().productName,
+      status: "pending",
+      deliveryDeadline: Date.now() + 3600000,
+      createdAt: serverTimestamp()
+    });
+    await deleteDoc(doc(db,"carts",d.id));
+  });
+  loadOrders();
+};
+
+/* ORDERS */
+async function loadOrders() {
+  const q = query(collection(db,"orders"), where("customerId","==",user.uid));
+  const snap = await getDocs(q);
+  orders.innerHTML = "";
+  snap.forEach(d => {
+    const o = d.data();
+    const mins = o.deliveryDeadline
+      ? Math.max(0, Math.floor((o.deliveryDeadline-Date.now())/60000))
+      : "";
+    orders.innerHTML += `
+      <div class="order">
+        <b>${o.productName}</b><br>
+        Status: ${o.status}<br>
+        ${mins ? mins+" min left" : ""}
+        ${o.status==="pending" ? <button onclick="cancel('${d.id}')">Cancel</button>:""}
+        ${o.status==="delivered" ? <button onclick="rate('${d.id}')">Rate</button>:""}
+      </div>`;
+  });
+}
+
+window.cancel = async id => {
+  const r = prompt("Reason?");
+  if (!r) return;
+  await updateDoc(doc(db,"orders",id), { status:"cancelled", cancelReason:r });
+  loadOrders();
+};
+
+window.rate = async id => {
+  const s = prompt("Rate 1-5");
+  await addDoc(collection(db,"ratings"), { orderId:id, stars:s });
+  alert("Thanks!");
+};
+
+window.fav = async pid => {
+  await addDoc(collection(db,"favourites"), { userId:user.uid, productId:pid });
+  alert("Added to favourites");
+};
+</script>
+
 </body>
 </html>
