@@ -1,162 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Next Hour</title>
   <link rel="stylesheet" href="css/style.css">
-  <style>
-    body { font-family: Arial; margin: 40px; }
-    input, select, button { margin: 5px 0; padding: 6px; }
-    .hidden { display: none; }
-  </style>
 </head>
+
 <body>
-<div class="box">
-<h1>Next Hour</h1>
-<p>AT YOUR DOORSTEP IN 60 MINUTES.</p>
 
-<!-- AUTH SECTION -->
-<div id="authSection">
-  <h2>Signup / Login</h2>
+  <div class="box">
 
-  <input type="email" id="email" placeholder="Email"><br>
-  <input type="password" id="password" placeholder="Password"><br>
+    <h2>Next Hour</h2>
+    <p>At your doorstep in 60 minutes</p>
 
-  <select id="role">
-    <option value="customer">Customer</option>
-    <option value="seller">Seller</option>
-  </select><br>
+    <!-- AUTH SECTION -->
+    <div id="authSection">
+      <input id="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Password">
 
-  <button onclick="signup()">Sign Up</button>
-  <button onclick="login()">Login</button>
-  <br><br>
-  <button onclick="googleLogin()">Continue with Google</button>
-</div>
+      <select id="role">
+        <option value="customer">Customer</option>
+        <option value="seller">Seller</option>
+      </select>
 
-<!-- CUSTOMER DASHBOARD -->
-<div id="customerDashboard" class="hidden">
-  <h2>Customer Dashboard</h2>
-  <p>Welcome! Order delivered in 60 minutes 🚀</p>
-  <button onclick="logout()">Logout</button>
-</div>
+      <button onclick="signup()">Signup</button>
+      <button onclick="login()">Login</button>
+      <button onclick="googleLogin()">Continue with Google</button>
+    </div>
 
-<!-- SELLER DASHBOARD -->
-<div id="sellerDashboard" class="hidden">
-  <h2>Seller Dashboard</h2>
-  <p>Manage your products and orders 📦</p>
-  <button onclick="logout()">Logout</button>
-</div>
+    <!-- CUSTOMER DASHBOARD -->
+    <div id="customerDashboard" class="hidden">
+      <h3>Customer Dashboard</h3>
+      <button onclick="logout()">Logout</button>
+    </div>
 
-<script type="module">
-  // 🔹 IMPORTS
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    GoogleAuthProvider,
-    signInWithPopup,
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    <!-- SELLER DASHBOARD -->
+    <div id="sellerDashboard" class="hidden">
+      <h3>Seller Dashboard</h3>
+      <button onclick="logout()">Logout</button>
+    </div>
 
-  import {
-    getFirestore,
-    doc,
-    setDoc,
-    getDoc,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  </div>
 
-  // 🔹 FIREBASE CONFIG (REPLACE WITH YOUR OWN)
-  const firebaseConfig = {
-   apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
-  authDomain: "nexthour-3248f.firebaseapp.com",
-  projectId: "nexthour-3248f",
-  storageBucket: "nexthour-3248f.firebasestorage.app",
-  messagingSenderId: "83247480758",
-  appId: "1:83247480758:web:27f8f8507273d54ee44b17"
-};
+  <!-- SCRIPTS (VERY IMPORTANT PLACE) -->
+  <script type="module" src="./firebase.js"></script>
+  <script type="module" src="./auth.js"></script>
 
-  // 🔹 INIT
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
-
-  // 🔹 UI HANDLERS
-  function show(section) {
-    authSection.classList.add("hidden");
-    customerDashboard.classList.add("hidden");
-    sellerDashboard.classList.add("hidden");
-    section.classList.remove("hidden");
-  }
-
-  // 🔹 SIGNUP
-  window.signup = async () => {
-    const email = email.value;
-    const password = password.value;
-    const role = document.getElementById("role").value;
-
-    try {
-      const res = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, "users", res.user.uid), {
-        email,
-        role,
-        provider: "email",
-        createdAt: serverTimestamp()
-      });
-      alert("Signup successful");
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  // 🔹 LOGIN
-  window.login = async () => {
-    try {
-      await signInWithEmailAndPassword(auth, email.value, password.value);
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  // 🔹 GOOGLE LOGIN
-  window.googleLogin = async () => {
-    try {
-      const res = await signInWithPopup(auth, provider);
-      await setDoc(doc(db, "users", res.user.uid), {
-        email: res.user.email,
-        role: "customer",
-        provider: "google",
-        createdAt: serverTimestamp()
-      }, { merge: true });
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  // 🔹 AUTH STATE
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      show(authSection);
-      return;
-    }
-
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (!snap.exists()) return;
-
-    const role = snap.data().role;
-    role === "seller" ? show(sellerDashboard) : show(customerDashboard);
-  });
-
-  // 🔹 LOGOUT
-  window.logout = async () => {
-    await signOut(auth);
-    show(authSection);
-  };
-
-</div>
-</script>
 </body>
 </html>
