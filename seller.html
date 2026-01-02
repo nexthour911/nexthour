@@ -1,7 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Seller Dashboard</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      padding: 40px;
+    }
+
+    .box {
+      max-width: 400px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 14px;
+    }
+
+    button {
+      background: #16a34a;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .logout {
+      background: #dc2626;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
 <body>
-  <h1>Seller Dashboard</h1>
-  <p>Welcome, seller 🏪</p>
+
+  <div class="box">
+    <h2>Seller Dashboard 🏪</h2>
+
+    <input id="productName" placeholder="Product name">
+    <input id="productPrice" type="number" placeholder="Price">
+
+    <button id="addProductBtn">Add Product</button>
+
+    <button class="logout" id="logoutBtn">Logout</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // 🔴 SAME FIREBASE CONFIG AS index.html
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    // 🔐 CHECK LOGIN
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        window.location.href = "index.html";
+      } else {
+        currentUser = user;
+      }
+    });
+
+    // ➕ ADD PRODUCT
+    document.getElementById("addProductBtn").onclick = async () => {
+      const name = document.getElementById("productName").value;
+      const price = document.getElementById("productPrice").value;
+
+      if (!name || !price) {
+        alert("Fill all fields");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "products"), {
+          name: name,
+          price: Number(price),
+          sellerId: currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+
+        alert("Product added ✅");
+        document.getElementById("productName").value = "";
+        document.getElementById("productPrice").value = "";
+
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+
+    // 🚪 LOGOUT
+    document.getElementById("logoutBtn").onclick = () => {
+      signOut(auth).then(() => {
+        window.location.href = "index.html";
+      });
+    };
+  </script>
+
 </body>
 </html>
