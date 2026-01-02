@@ -74,6 +74,16 @@ header input {
 #cart ul { list-style: none; padding: 0; }
 #cart button { padding: 6px 10px; }
 
+/* PAYMENT & ADDRESS */
+#cart label { display: block; margin-top: 8px; }
+#cart select, #cart textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
 /* ORDERS */
 section {
   padding: 12px;
@@ -109,6 +119,17 @@ section {
 
 <div id="cart">
   <ul id="cartItems"></ul>
+
+  <!-- Payment Method -->
+  <label for="paymentMethod">Payment Method:</label>
+  <select id="paymentMethod">
+    <option value="cod" selected>Cash on Delivery</option>
+  </select>
+
+  <!-- Address -->
+  <label for="addressInput">Delivery Address:</label>
+  <textarea id="addressInput" placeholder="Enter your address here" rows="2"></textarea>
+
   <button id="checkoutBtn" class="success">Place Order</button>
 </div>
 
@@ -120,11 +141,12 @@ import {
   query, where, deleteDoc, doc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+/* 🔴 Replace with your Firebase keys */
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_PROJECT",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
+  authDomain: "nexthour-3248f.firebaseapp.com",
+  projectId: "nexthour-3248f",
+  appId: "1:83247480758:web:27f8f8507273d54ee44b17"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -212,14 +234,20 @@ window.removeCart = async id => {
   loadCart();
 };
 
-/* ORDER */
+/* CHECKOUT */
 checkoutBtn.onclick = async () => {
+  const paymentMethod = document.getElementById("paymentMethod").value;
+  const address = document.getElementById("addressInput").value.trim();
+  if (!address) { alert("Please enter delivery address!"); return; }
+
   const snap = await getDocs(query(collection(db,"carts"), where("userId","==",user.uid)));
   snap.forEach(async d => {
     await addDoc(collection(db,"orders"), {
       customerId: user.uid,
       productName: d.data().productName,
       status: "pending",
+      paymentMethod: paymentMethod,
+      address: address,
       deliveryDeadline: Date.now() + 3600000,
       createdAt: serverTimestamp()
     });
@@ -242,6 +270,8 @@ async function loadOrders() {
       <div class="order">
         <b>${o.productName}</b><br>
         Status: ${o.status}<br>
+        Payment: ${o.paymentMethod}<br>
+        Address: ${o.address}<br>
         ${mins ? mins+" min left" : ""}
         ${o.status==="pending" ? <button onclick="cancel('${d.id}')">Cancel</button>:""}
         ${o.status==="delivered" ? <button onclick="rate('${d.id}')">Rate</button>:""}
@@ -249,6 +279,7 @@ async function loadOrders() {
   });
 }
 
+/* CANCEL & RATE */
 window.cancel = async id => {
   const r = prompt("Reason?");
   if (!r) return;
@@ -266,6 +297,7 @@ window.fav = async pid => {
   await addDoc(collection(db,"favourites"), { userId:user.uid, productId:pid });
   alert("Added to favourites");
 };
+
 </script>
 
 </body>
