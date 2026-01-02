@@ -7,28 +7,25 @@ body {
 .box {
   width: 350px;
   background: white;
-  margin: 100px auto;
+  margin: 80px auto;
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
-h2 {
-  text-align: center;
-  margin-bottom: 15px;
-}
-
-input {
+input, select, button {
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
 }
 
 button {
-  width: 100%;
-  padding: 10px;
   background: #5b5fff;
   color: white;
   border: none;
   cursor: pointer;
+}
+
+.hidden {
+  display: none;
 }
