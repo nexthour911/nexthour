@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Next Hour</title>
 
-  <!-- BASIC STYLING (you can improve later) -->
+  <!-- BASIC STYLING -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -69,14 +69,14 @@
       <option value="seller">Seller</option>
     </select>
 
-    <button onclick="signup()">Signup</button>
-    <button onclick="login()">Login</button>
-    <button class="google" onclick="googleLogin()">Continue with Google</button>
+    <button id="signupBtn">Signup</button>
+    <button id="loginBtn">Login</button>
+    <button id="googleBtn" class="google">Continue with Google</button>
   </div>
 
-  <!-- 🔥 FIREBASE + AUTH LOGIC (ALL IN ONE FILE) -->
+  <!-- FIREBASE + AUTH LOGIC -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import {
       getAuth,
       createUserWithEmailAndPassword,
@@ -90,54 +90,61 @@
       apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
       authDomain: "nexthour-3248f.firebaseapp.com",
       projectId: "nexthour-3248f",
+      storageBucket: "nexthour-3248f.firebasestorage.app",
+      messagingSenderId: "83247480758",
       appId: "1:83247480758:web:27f8f8507273d54ee44b17"
     };
+    };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-    const app = initializeApp(firebaseConfig);
+    // Initialize Firebase app (avoid multiple declarations)
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // SIGNUP
-    window.signup = function () {
+    // SIGNUP FUNCTION
+    function signup() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
       createUserWithEmailAndPassword(auth, email, password)
         .then(() => {
-          alert("Signup successful");
+          alert("Signup successful!");
         })
         .catch(error => {
           alert(error.message);
         });
-    };
+    }
 
-    // LOGIN
-    window.login = function () {
+    // LOGIN FUNCTION
+    function login() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
       signInWithEmailAndPassword(auth, email, password)
         .then(() => {
-          alert("Login successful");
+          alert("Login successful!");
         })
         .catch(error => {
           alert(error.message);
         });
-    };
+    }
 
-    // GOOGLE LOGIN
-    window.googleLogin = function () {
+    // GOOGLE LOGIN FUNCTION
+    function googleLogin() {
       signInWithPopup(auth, provider)
         .then(() => {
-          alert("Google login successful");
+          alert("Google login successful!");
         })
         .catch(error => {
           alert(error.message);
         });
-    };
+    }
+
+    // Attach event listeners to buttons
+    document.getElementById("signupBtn").addEventListener("click", signup);
+    document.getElementById("loginBtn").addEventListener("click", login);
+    document.getElementById("googleBtn").addEventListener("click", googleLogin);
+
   </script>
 
 </body>
