@@ -1,174 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Next Hour</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #eef2ff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .box {
-      background: white;
-      padding: 30px;
-      width: 330px;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      font-size: 14px;
-    }
-
-    button {
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-      background: #2563eb;
-      color: white;
-    }
-
-    .google {
-      background: #db4437;
-    }
-  </style>
-</head>
-
+<html>
 <body>
 
-  <div class="box">
-    <h2>Next Hour</h2>
-    <p>At your doorstep in 60 minutes</p>
+<h2>NextHour Login</h2>
 
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
+<select id="role">
+  <option value="customer">Customer</option>
+  <option value="seller">Seller</option>
+</select>
 
-    <select id="role">
-      <option value="customer">Customer</option>
-      <option value="seller">Seller</option>
-    </select>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<input id="city" placeholder="City (Raipur only)">
+<button onclick="signup()">Signup</button>
+<button onclick="login()">Login</button>
 
-    <button id="signupBtn">Signup</button>
-    <button id="loginBtn">Login</button>
-    <button id="googleBtn" class="google">Continue with Google</button>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      GoogleAuthProvider,
-      signInWithPopup
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-    import {
-      getFirestore,
-      doc,
-      setDoc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-    // 🔴 REPLACE WITH YOUR FIREBASE CONFIG
-    const firebaseConfig = {
-      apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
-      authDomain: "nexthour-3248f.firebaseapp.com",
-      projectId: "nexthour-3248f",
-      appId: "1:83247480758:web:27f8f8507273d54ee44b17"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
-
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
-    const roleSelect = document.getElementById("role");
-
-    // SIGNUP
-    document.getElementById("signupBtn").onclick = async () => {
-      try {
-        const userCred = await createUserWithEmailAndPassword(
-          auth,
-          email.value,
-          password.value
-        );
-
-        await setDoc(doc(db, "users", userCred.user.uid), {
-          email: email.value,
-          role: roleSelect.value
-        });
-
-        alert("Signup successful ✅");
-
-      } catch (err) {
-        alert(err.message);
-      }
-    };
-
-    // LOGIN
-    document.getElementById("loginBtn").onclick = async () => {
-      try {
-        const userCred = await signInWithEmailAndPassword(
-          auth,
-          email.value,
-          password.value
-        );
-
-        const snap = await getDoc(doc(db, "users", userCred.user.uid));
-
-        if (!snap.exists()) {
-          alert("User role not found");
-          return;
-        }
-
-        const role = snap.data().role;
-
-        if (role === "seller") {
-          window.location.href = "seller.html";
-        } else {
-          window.location.href = "customer.html";
-        }
-
-      } catch (err) {
-        alert(err.message);
-      }
-    };
-
-    // GOOGLE LOGIN
-    document.getElementById("googleBtn").onclick = async () => {
-      try {
-        const userCred = await signInWithPopup(auth, provider);
-
-        const ref = doc(db, "users", userCred.user.uid);
-        const snap = await getDoc(ref);
-
-        if (!snap.exists()) {
-          await setDoc(ref, {
-            email: userCred.user.email,
-            role: "customer"
-          });
-        }
-
-        window.location.href = "customer.html";
-
-      } catch (err) {
-        alert(err.message);
-      }
-    };
-  </script>
-
+<script type="module" src="auth.js"></script>
 </body>
 </html>
