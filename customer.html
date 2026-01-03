@@ -2,146 +2,104 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Quick Commerce</title>
+<title>Seller Dashboard</title>
 
 <style>
 body {
-  margin: 0;
   font-family: system-ui, sans-serif;
-  background: #f5f5f5;
+  background:#f1f5f9;
+  padding:20px;
 }
 
-/* HEADER */
-header {
-  background: white;
-  padding: 12px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: 0 2px 10px rgba(0,0,0,.1);
+.box {
+  background:white;
+  padding:20px;
+  margin-bottom:20px;
+  border-radius:10px;
+  box-shadow:0 10px 25px rgba(0,0,0,.1);
 }
 
-header h2 { margin: 0; }
-header input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 8px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
+input, select, button {
+  width:100%;
+  padding:8px;
+  margin-top:8px;
 }
 
-/* CATEGORIES */
-#categories {
-  display: flex;
-  overflow-x: auto;
-  gap: 10px;
-  padding: 10px;
-  background: white;
-}
-#categories button {
-  padding: 8px 14px;
-  border-radius: 20px;
-  border: none;
-  background: #e5e7eb;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-/* PRODUCTS */
-#products {
-  padding: 12px;
-}
-.product {
-  background: white;
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.product small { color: gray; }
-
-/* CART */
-#cart {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: white;
-  padding: 10px;
-  box-shadow: 0 -2px 10px rgba(0,0,0,.2);
-}
-#cart ul { list-style: none; padding: 0; }
-#cart button { padding: 6px 10px; }
-
-/* PAYMENT & ADDRESS */
-#cart label { display: block; margin-top: 8px; }
-#cart select, #cart textarea {
-  width: 100%;
-  padding: 8px;
-  margin-top: 4px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-/* ORDERS */
-section {
-  padding: 12px;
-}
-.order {
-  background: white;
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 10px;
+button {
+  cursor:pointer;
 }
 
 .danger { background:#dc2626;color:white;border:none; }
 .success { background:#16a34a;color:white;border:none; }
+.gray { background:#334155;color:white;border:none; }
 
+li {
+  background:#f8fafc;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+}
 </style>
 </head>
 
 <body>
 
-<header>
-  <h2>Deliver in 1 hour</h2>
-  <input id="searchInput" placeholder="Search products">
-</header>
+<!-- ADD PRODUCT -->
+<div class="box">
+  <h2>Add Product</h2>
+  <input id="name" placeholder="Product name">
+  <input id="price" placeholder="Price" type="number">
 
-<div id="categories"></div>
-
-<div id="products"></div>
-
-<section>
-  <h3>My Orders</h3>
-  <div id="orders"></div>
-</section>
-
-<div id="cart">
-  <ul id="cartItems"></ul>
-
-  <!-- Payment Method -->
-  <label for="paymentMethod">Payment Method:</label>
-  <select id="paymentMethod">
-    <option value="cod" selected>Cash on Delivery</option>
+  <select id="category">
+    <option value="">Select category</option>
+    <option>Men's wear</option>
+    <option>Women's wear</option>
+    <option>Kid's wear</option>
+    <option>Street style</option>
+    <option>Casuals</option>
+    <option>Classy</option>
+    <option>Formals</option>
+    <option>Party wear</option>
   </select>
 
-  <!-- Address -->
-  <label for="addressInput">Delivery Address:</label>
-  <textarea id="addressInput" placeholder="Enter your address here" rows="2"></textarea>
-
-  <button id="checkoutBtn" class="success">Place Order</button>
+  <button class="success" onclick="addProduct()">Add Product</button>
 </div>
+
+<!-- CATEGORY FILTER -->
+<div class="box">
+  <h2>My Products</h2>
+
+  <select id="sellerCategoryFilter">
+    <option value="">All Categories</option>
+    <option>Men's wear</option>
+    <option>Women's wear</option>
+    <option>Kid's wear</option>
+    <option>Street style</option>
+    <option>Casuals</option>
+    <option>Classy</option>
+    <option>Formals</option>
+    <option>Party wear</option>
+  </select>
+
+  <ul id="productList"></ul>
+</div>
+
+<!-- ORDERS -->
+<div class="box">
+  <h2>Orders</h2>
+  <ul id="orderList"></ul>
+</div>
+
+<button class="gray" onclick="logout()">Logout</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs,
   query, where, deleteDoc, doc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* 🔴 Replace with your Firebase keys */
 const firebaseConfig = {
   apiKey: "AIzaSyBNR5Td6W_7TAjfRhoJzYrGJMgy3Ff_E1Q",
   authDomain: "nexthour-3248f.firebaseapp.com",
@@ -152,152 +110,146 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+let currentUser;
 
-let user, activeCategory = "";
-
-const categoryList = [
-  "Men's wear","Women's wear","Kid's wear","Street style",
-  "Casuals","Classy","Formals","Party wear"
-];
-
-/* AUTH */
-onAuthStateChanged(auth, u => {
-  if (!u) location.href = "index.html";
-  user = u;
-  renderCategories();
+/* AUTH CHECK */
+onAuthStateChanged(auth, user => {
+  if (!user) location.href = "index.html";
+  currentUser = user;
   loadProducts();
-  loadCart();
   loadOrders();
 });
 
-/* CATEGORIES */
-function renderCategories() {
-  categories.innerHTML = "";
-  categoryList.forEach(c => {
-    const b = document.createElement("button");
-    b.innerText = c;
-    b.onclick = () => { activeCategory = c; loadProducts(); };
-    categories.appendChild(b);
-  });
-}
+sellerCategoryFilter.onchange = loadProducts;
 
-/* PRODUCTS */
+/* ADD PRODUCT */
+window.addProduct = async () => {
+  if (!name.value || !price.value || !category.value) {
+    alert("Fill all fields");
+    return;
+  }
+
+  await addDoc(collection(db,"products"), {
+    name: name.value,
+    price: price.value,
+    category: category.value,
+    sellerId: currentUser.uid,
+    createdAt: serverTimestamp()
+  });
+
+  name.value = "";
+  price.value = "";
+  category.value = "";
+
+  loadProducts();
+};
+
+/* LOAD PRODUCTS (CATEGORY-WISE) */
 async function loadProducts() {
-  const snap = await getDocs(collection(db,"products"));
-  products.innerHTML = "";
+  const q = query(
+    collection(db,"products"),
+    where("sellerId","==",currentUser.uid)
+  );
+
+  const snap = await getDocs(q);
+  productList.innerHTML = "";
 
   snap.forEach(d => {
     const p = d.data();
-    if (
-      (!activeCategory || p.category === activeCategory) &&
-      (!searchInput.value || p.name.toLowerCase().includes(searchInput.value.toLowerCase()))
-    ) {
-      products.innerHTML += `
-        <div class="product">
-          <div>
-            <b>${p.name}</b><br>
-            <small>${p.category}</small><br>
-            ₹${p.price}
-          </div>
-          <div>
-            <button onclick="addToCart('${d.id}','${p.name}')">＋</button>
-            <button onclick="fav('${d.id}')">❤️</button>
-          </div>
-        </div>`;
+
+    if (!sellerCategoryFilter.value || p.category === sellerCategoryFilter.value) {
+      productList.innerHTML += `
+        <li>
+          <b>${p.name}</b><br>
+          ₹${p.price}<br>
+          <small>${p.category}</small><br>
+          <button class="danger" onclick="deleteProduct('${d.id}')">Delete</button>
+        </li>`;
     }
   });
-}
-searchInput.oninput = loadProducts;
 
-/* CART */
-window.addToCart = async (pid,name) => {
-  await addDoc(collection(db,"carts"), {
-    userId: user.uid,
-    productId: pid,
-    productName: name
-  });
-  loadCart();
-};
-
-async function loadCart() {
-  const q = query(collection(db,"carts"), where("userId","==",user.uid));
-  const snap = await getDocs(q);
-  cartItems.innerHTML = "";
-  snap.forEach(d => {
-    cartItems.innerHTML += `<li>${d.data().productName}
-    <button onclick="removeCart('${d.id}')">−</button></li>`;
-  });
+  if (!productList.innerHTML) {
+    productList.innerHTML = "<li>No products in this category</li>";
+  }
 }
 
-window.removeCart = async id => {
-  await deleteDoc(doc(db,"carts",id));
-  loadCart();
+/* DELETE PRODUCT */
+window.deleteProduct = async id => {
+  if (!confirm("Delete this product?")) return;
+  await deleteDoc(doc(db,"products",id));
+  loadProducts();
 };
 
-/* CHECKOUT */
-checkoutBtn.onclick = async () => {
-  const paymentMethod = document.getElementById("paymentMethod").value;
-  const address = document.getElementById("addressInput").value.trim();
-  if (!address) { alert("Please enter delivery address!"); return; }
-
-  const snap = await getDocs(query(collection(db,"carts"), where("userId","==",user.uid)));
-  snap.forEach(async d => {
-    await addDoc(collection(db,"orders"), {
-      customerId: user.uid,
-      productName: d.data().productName,
-      status: "pending",
-      paymentMethod: paymentMethod,
-      address: address,
-      deliveryDeadline: Date.now() + 3600000,
-      createdAt: serverTimestamp()
-    });
-    await deleteDoc(doc(db,"carts",d.id));
-  });
-  loadOrders();
-};
-
-/* ORDERS */
+/* LOAD ORDERS */
 async function loadOrders() {
-  const q = query(collection(db,"orders"), where("customerId","==",user.uid));
+  const q = query(
+    collection(db,"orders"),
+    where("sellerId","==",currentUser.uid)
+  );
+
   const snap = await getDocs(q);
-  orders.innerHTML = "";
+  orderList.innerHTML = "";
+
   snap.forEach(d => {
     const o = d.data();
-    const mins = o.deliveryDeadline
-      ? Math.max(0, Math.floor((o.deliveryDeadline-Date.now())/60000))
-      : "";
-    orders.innerHTML += `
-      <div class="order">
+
+    let buttons = "";
+
+    if (o.status === "pending") {
+      buttons = `
+        <button class="success" onclick="acceptOrder('${d.id}')">Accept</button>
+        <button class="danger" onclick="rejectOrder('${d.id}')">Reject</button>
+      `;
+    }
+
+    if (o.status === "accepted") {
+      buttons = <button onclick="updateStatus('${d.id}','out for delivery')">Out for delivery</button>;
+    }
+
+    if (o.status === "out for delivery") {
+      buttons = <button onclick="updateStatus('${d.id}','delivered')">Delivered</button>;
+    }
+
+    orderList.innerHTML += `
+      <li>
         <b>${o.productName}</b><br>
         Status: ${o.status}<br>
-        Payment: ${o.paymentMethod}<br>
-        Address: ${o.address}<br>
-        ${mins ? mins+" min left" : ""}
-        ${o.status==="pending" ? <button onclick="cancel('${d.id}')">Cancel</button>:""}
-        ${o.status==="delivered" ? <button onclick="rate('${d.id}')">Rate</button>:""}
-      </div>`;
+        Payment: ${o.paymentMode}<br>
+        Address: ${o.deliveryAddress}<br>
+        ${buttons}
+      </li>`;
   });
 }
 
-/* CANCEL & RATE */
-window.cancel = async id => {
-  const r = prompt("Reason?");
-  if (!r) return;
-  await updateDoc(doc(db,"orders",id), { status:"cancelled", cancelReason:r });
+/* ACCEPT */
+window.acceptOrder = async id => {
+  await updateDoc(doc(db,"orders",id), { status:"accepted" });
   loadOrders();
 };
 
-window.rate = async id => {
-  const s = prompt("Rate 1-5");
-  await addDoc(collection(db,"ratings"), { orderId:id, stars:s });
-  alert("Thanks!");
+/* REJECT */
+window.rejectOrder = async id => {
+  const reason = prompt("Reason (e.g. product out of stock)");
+  if (!reason) return;
+
+  await updateDoc(doc(db,"orders",id), {
+    status:"rejected",
+    rejectReason: "Sorry, " + reason
+  });
+
+  loadOrders();
 };
 
-window.fav = async pid => {
-  await addDoc(collection(db,"favourites"), { userId:user.uid, productId:pid });
-  alert("Added to favourites");
+/* UPDATE STATUS */
+window.updateStatus = async (id,status) => {
+  await updateDoc(doc(db,"orders",id), { status });
+  loadOrders();
 };
 
+/* LOGOUT */
+window.logout = () => {
+  signOut(auth).then(() => location.href = "index.html");
+};
 </script>
 
 </body>
